@@ -199,9 +199,11 @@ public func verifySnapshot<Value, Format>(
       }
 
       let testName = sanitizePathComponent(testName)
-      let snapshotFileUrl = snapshotDirectoryUrl
-        .appendingPathComponent("\(testName).\(identifier)")
-        .appendingPathExtension(snapshotting.pathExtension ?? "")
+      let myBundle = Bundle(for: CleanCounterBetweenTestCases.self)
+      let snapshotFileUrl = myBundle.path(forResource: "\(testName).\(identifier)", ofType: snapshotting.pathExtension).map({ URL(fileURLWithPath: $0) })
+        ?? snapshotDirectoryUrl
+            .appendingPathComponent("\(testName).\(identifier)")
+            .appendingPathExtension(snapshotting.pathExtension ?? "")
       let fileManager = FileManager.default
       try fileManager.createDirectory(at: snapshotDirectoryUrl, withIntermediateDirectories: true)
 
@@ -233,7 +235,7 @@ public func verifySnapshot<Value, Format>(
       guard var diffable = optionalDiffable else {
         return "Couldn't snapshot value"
       }
-      
+
       guard !recording, fileManager.fileExists(atPath: snapshotFileUrl.path) else {
         try snapshotting.diffing.toData(diffable).write(to: snapshotFileUrl)
         #if !os(Linux) && !os(Windows)
